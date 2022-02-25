@@ -1,29 +1,20 @@
+require('dotenv').config()
+require('./mongo')
 const express = require('express')
 const cors = require ('cors')
 const app = express()
+const Note = require('./models/Note')
+const notFound = require('./middleware/notFound')
+const handleErrors = require('./middleware/handleErrors')
+const userExtractor = require('./middleware/userExtractor')
+const usersRouter = require('./controllers/users')
+const loginRouter = require('./controllers/login')
+const User = require('./models/User')
+const { findById } = require('./models/User')
+
 app.use(express.json())
 app.use(cors())
 
-let notes = [
-  {
-    userId: 1,
-    id: 1,
-    title: 'sunt aut facere repellat provident occaecati excepturi optio reprehenderit',
-    body: 'quia et suscipit\nsuscipit  consequuntur expedita et cum\nreprehenderit molestiae ut ut quas totam\nnostrum rerum est autem sunt rem eveniet architecto'
-  },
-  {
-    userId: 1,
-    id: 2,
-    title: 'qui est esse',
-    body: 'est rerum tempore vitae\nsequi sint nihil reprehenderit dolor beatae ea dolores neque\nfugiat blanditiis voluptate porro vel nihil molestiae ut reiciendis\nqui aperiam non debitis possimus qui neque nisi nulla'
-  },
-  {
-    userId: 1,
-    id: 3,
-    title: 'ea molestias quasi exercitationem repellat qui ipsa sit aut',
-    body: 'et iusto sed quo iure\nvoluptatem occaecati omnis eligendi aut ad\nvoluptatem doloribus vel accusantium quis pariatur\nmolestiae porro eius odio et labore et velit aut'
-  }
-]
 
 /* const app = http.createServer((request, response) => {
     response.writeHead(200, {'Content-Type' : 'text/plain'})
@@ -34,52 +25,104 @@ app.get('/', (request, response) => {
   response.send('<h1>Hello World</h1>')
 })
 
-app.get('/api/notes', (request, response) => {
-  response.json(notes)
+app.get('/api/notes', async(request, response) => {
+  const notes = await Note.find({}).populate('user', {
+    username: 1,
+    name: 1
+  })
+    response.json(notes)
+  
+}) 
+
+app.get('/api/notes/:id', (request, response, next) => {
+  const {id} = request.params
+  Note.findById(id).then(note => {
+    if (note) {
+      return response.json(note)
+    } else {
+      response.status(404).end()
+    }
+  }).catch(err =>{
+    next(err)
+  })
 })
 
-app.get('/api/notes/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const note = notes.find(note => note.id === id)
-
-  if (note) {
-    response.json(note)
-  } else {
-    response.status(404).end()
+app.put('/api/notes/:id', userExtractor, (request, response, next) => {
+  const {id} = request.params
+  const note = request.body
+  const newNoteInfo = {
+    content: note.content,
+    important: note.important
   }
+
+  Note.findByIdAndUpdate(id, newNoteInfo, {new: true})
+  .then(result => {
+    response.json(result)
+  })
 })
 
-app.delete('/api/notes/:id', (request, response) => {
-  const id = Number(request.params.id)
-  notes = notes.filter(note => note.id != id)
+app.delete('/api/notes/:id', userExtractor, (request, response, next) => {
+  const {id} = request.params
+
+  Note.findByIdAndDelete(id).then(() => {
+
+  }).catch(error => next(error)) 
+
   response.status(204).end()
 })
 
-app.post('/api/notes', (request, response) => {
-  const note = request.body
 
-  if (!note || !note.content) {
+
+app.post('/api/notes', userExtractor, async (request, response, next) => {
+
+  const {
+    content,
+    important = false,
+  } = request.body
+
+  // sacar userID de request
+  const { userId } = request
+
+  const user = await User.findById(userId)
+
+  if (!content) {
     return response.status(400).json({
-      error: 'note.content is missing'
+      error: 'required "content" is missing'
     })
   }
 
-  const ids = notes.map(note => note.id)
-  const maxId = Math.max(...ids)
+  const newNote = new Note({
+    content,
+    important,
+    date: new Date(),
+    user: user._id //relacionar con el usuario
+  })
 
-  const newNote = {
-    id: maxId + 1,
-    content: note.content,
-    important: typeof note.important !== 'undefined' ? note.important : false,
-    date: new Date().toISOString()
+  
+  try {
+    const savedNote = await newNote.save()
+
+    user.notes = user.notes.concat(savedNote._id)
+    await user.save()
+
+    response.json(savedNote)
+  } catch (error) {
+    next(error)
   }
 
-  notes = notes.concat(newNote)
-
-  response.json(newNote)
 })
 
-const PORT = 3001
+
+
+//en api/users usamos el controlador
+app.use('/api/users', usersRouter )
+app.use('/api/login', loginRouter )
+
+app.use(notFound)
+
+app.use(handleErrors)
+
+const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
