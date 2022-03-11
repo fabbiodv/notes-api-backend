@@ -34,6 +34,7 @@ app.get('/api/notes', async(request, response) => {
   
 }) 
 
+
 app.get('/api/notes/:id', (request, response, next) => {
   const {id} = request.params
   Note.findById(id).then(note => {
@@ -47,9 +48,11 @@ app.get('/api/notes/:id', (request, response, next) => {
   })
 })
 
+
 app.put('/api/notes/:id', userExtractor, (request, response, next) => {
   const {id} = request.params
   const note = request.body
+
   const newNoteInfo = {
     content: note.content,
     important: note.important
@@ -60,6 +63,7 @@ app.put('/api/notes/:id', userExtractor, (request, response, next) => {
     response.json(result)
   })
 })
+
 
 app.delete('/api/notes/:id', userExtractor, (request, response, next) => {
   const {id} = request.params
@@ -126,3 +130,6 @@ const PORT = process.env.PORT
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
+
+
+module.exports = app
