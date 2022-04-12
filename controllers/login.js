@@ -24,16 +24,16 @@ loginRouter.post('/', async (request, response) => {
     username: user.username
   }
 
-  const token = jwt.sign(
+  const token = jwt.sign( //firmar 
     userForToken,
     process.env.SECRET,
     {
-      expiresIn: 60 * 60 * 24 * 7
+      expiresIn: 60 * 60 * 24 * 7 //volver a inicar sesion en 7 dias
     }
     )
 
 
-  response.send({
+  response.send({ //devuelve token cuando logea
     name:user.name,
     username: user.username,
     token

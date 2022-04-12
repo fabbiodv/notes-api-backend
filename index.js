@@ -26,7 +26,7 @@ app.get('/', (request, response) => {
 })
 
 app.get('/api/notes', async(request, response) => {
-  const notes = await Note.find({}).populate('user', {
+  const notes = await Note.find({}).populate('user', { //rellenar la informacion de las notas con el usuario
     username: 1,
     name: 1
   })
@@ -65,10 +65,10 @@ app.put('/api/notes/:id', userExtractor, (request, response, next) => {
 })
 
 
-app.delete('/api/notes/:id', userExtractor, (request, response, next) => {
+app.delete('/api/notes/:id', userExtractor, async (request, response, next) => {
   const {id} = request.params
 
-  Note.findByIdAndDelete(id).then(() => {
+  await Note.findByIdAndDelete(id).then(() => {
 
   }).catch(error => next(error)) 
 
@@ -106,7 +106,7 @@ app.post('/api/notes', userExtractor, async (request, response, next) => {
   try {
     const savedNote = await newNote.save()
 
-    user.notes = user.notes.concat(savedNote._id)
+    user.notes = user.notes.concat(savedNote._id) //añade la nota a las notas
     await user.save()
 
     response.json(savedNote)
@@ -126,10 +126,10 @@ app.use(notFound)
 
 app.use(handleErrors)
 
-const PORT = process.env.PORT
-app.listen(PORT, () => {
+const PORT = process.env.PORT || 3001
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
 })
 
 
-module.exports = app
+module.exports = { app, server }

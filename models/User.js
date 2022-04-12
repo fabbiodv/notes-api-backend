@@ -1,13 +1,17 @@
+const uniqueValidator = require('mongoose-unique-validator');
 const {Schema, model} = require('mongoose')
 
 //Schema
 const userSchema = new Schema({
-  username: String,
+  username: { 
+    type: String,
+    unique: true //uniquevalidator
+  },
   name: String,
   passwordHash: String,
   notes: [{
     type: Schema.Types.ObjectId,
-    ref: 'Note'
+    ref: 'Note' //referencia del modelo Note
   }]
 
 })
@@ -18,10 +22,13 @@ userSchema.set('toJSON', {
     returnedObject.id = returnedObject._id
     delete returnedObject._id
     delete returnedObject.__v
+    
+    delete returnedObject.passwordHash   //nunca devuelve la password
 
-    delete returnedObject.passwordHash
   }
 })
+
+userSchema.plugin(uniqueValidator); //funcionalidad para ver si el campo es unico
 
 const User = model('User', userSchema)
 

@@ -1,6 +1,6 @@
 POST http://localhost:3001/api/notes/
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYxZmM4ZmNkNjVlODZlNTU3NTg3NzgzOCIsInVzZXJuYW1lIjoiZmFiYmlvZHYiLCJpYXQiOjE2NDM5NDYyNzQsImV4cCI6MTY0NDU1MTA3NH0.9lNEckbRitUCLVmAvPHYtkIKtizmUwoHcgeg7rb-i8g
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjYyNTQ4YjA0YTU1OWUwYWQ4OTljODQ0NSIsInVzZXJuYW1lIjoiZmFiYmlvZHYiLCJpYXQiOjE2NDk3MjI3MTMsImV4cCI6MTY1MDMyNzUxM30.B0XWYjuWuxq7CryZo7ecEiGi9fKzEA3eYt1YPK_gM_E
 
 {
   "content": "Probando el token con el middleware ",
